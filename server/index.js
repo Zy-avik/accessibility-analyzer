@@ -1,39 +1,32 @@
-const express = require('express');
-const cors = require('cors');
-const multer = require('multer');
-const path = require('path');
+const express = require("express");
+const cors = require("cors");
+const multer = require("multer");
 
 const app = express();
 const PORT = 5000;
 
 // Middleware
 app.use(cors());
-app.use(express.json());
 
-// Set up Multer for file upload
-const upload = multer({ dest: 'uploads/' });
+// Configure multer to store files in /uploads
+const upload = multer({ dest: "uploads/" });
 
-// Route for uploading the HTML file
-app.post('/upload', upload.single('htmlFile'), (req, res) => {
-  const file = req.file;
+// POST endpoint to receive file upload
+app.post("/upload", upload.single("file"), (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: "No file uploaded" });
+    }
 
-  if (!file) {
-    return res.status(400).json({ error: 'No file uploaded.' });
+    console.log("File uploaded:", req.file.originalname);
+    // Placeholder response
+    return res.json({ result: "Accessibility check passed ✅" });
+  } catch (error) {
+    console.error("Upload error:", error);
+    return res.status(500).json({ error: "Upload failed on server." });
   }
-
-  // Simulated response — you will later replace this with real analysis
-  const result = {
-    message: 'Accessibility check complete!',
-    issues: [
-      { type: 'missing-alt', detail: 'Image tag without alt text.' },
-      { type: 'low-contrast', detail: 'Text with poor contrast ratio.' }
-    ]
-  };
-
-  res.json(result);
 });
 
-// Start the server
 app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
+  console.log(`Server running on http://localhost:${PORT}`);
 });

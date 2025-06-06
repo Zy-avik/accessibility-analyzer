@@ -1,44 +1,40 @@
-import { useState } from 'react';
-import './App.css';
+import React, { useState } from "react";
+import axios from "axios";
 
 function App() {
   const [file, setFile] = useState(null);
-  const [result, setResult] = useState('');
+  const [result, setResult] = useState("");
 
   const handleFileChange = (e) => {
     setFile(e.target.files[0]);
   };
 
-  const handleScan = async () => {
-    if (!file) return alert("Please upload a file first!");
+  const handleUpload = async () => {
+    if (!file) return;
 
     const formData = new FormData();
-    formData.append("file", file);
+    formData.append("file", file); // <-- IMPORTANT: "file" must match backend
 
     try {
-      const res = await fetch("http://localhost:5000/analyze", {
-        method: "POST",
-        body: formData
+      const res = await axios.post("http://localhost:5000/upload", formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
       });
-
-      const data = await res.json();
-      setResult(data.message || "Scan complete!");
+      setResult(res.data.result || "No result returned.");
     } catch (err) {
-      setResult("Error occurred while scanning.");
+      console.error("Upload error:", err);
+      setResult("Error uploading file.");
     }
   };
 
   return (
-    <div className="app-container">
-      <h1>Accessibility Analyzer 🔍</h1>
-
+    <div style={{ padding: "20px" }}>
+      <h1>Accessibility Analyzer</h1>
       <input type="file" onChange={handleFileChange} />
-      <button onClick={handleScan}>Scan</button>
-
-      <div className="result-box">
-        <h3>Results:</h3>
-        <p>{result}</p>
-      </div>
+      <button onClick={handleUpload}>Scan File</button>
+      <h2>Results:</h2>
+      <pre>{result}</pre>
     </div>
   );
 }
