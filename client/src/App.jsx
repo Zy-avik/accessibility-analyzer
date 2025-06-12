@@ -1,40 +1,65 @@
 import React, { useState } from "react";
 import axios from "axios";
+import "./App.css"; // If you want custom styling
 
 function App() {
   const [file, setFile] = useState(null);
-  const [result, setResult] = useState("");
+  const [result, setResult] = useState(null);
+  const [error, setError] = useState("");
 
   const handleFileChange = (e) => {
     setFile(e.target.files[0]);
+    setResult(null);
+    setError("");
   };
 
-  const handleUpload = async () => {
-    if (!file) return;
+  const handleScan = async () => {
+    if (!file) {
+      setError("Please upload a file.");
+      return;
+    }
 
     const formData = new FormData();
-    formData.append("file", file); // <-- IMPORTANT: "file" must match backend
+    formData.append("file", file);
 
     try {
-      const res = await axios.post("http://localhost:5000/upload", formData, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
-      });
-      setResult(res.data.result || "No result returned.");
+      const response = await axios.post("http://localhost:5000/upload", formData);
+      setResult(response.data);
+      setError("");
     } catch (err) {
-      console.error("Upload error:", err);
-      setResult("Error uploading file.");
+      console.error(err);
+      setError("Error uploading file.");
     }
   };
 
   return (
-    <div style={{ padding: "20px" }}>
+    <div className="app">
       <h1>Accessibility Analyzer</h1>
-      <input type="file" onChange={handleFileChange} />
-      <button onClick={handleUpload}>Scan File</button>
+
+      <input type="file" accept=".html" onChange={handleFileChange} />
+      <button onClick={handleScan}>Scan File</button>
+
       <h2>Results:</h2>
-      <pre>{result}</pre>
+      {error && <p style={{ color: "red" }}>{error}</p>}
+
+      {result && (
+        <ul>
+          <li>
+            {result.imagesWithoutAlt === 0 ? (
+              <span>✅ All images have alt attributes.</span>
+            ) : (
+              <span>⚠️ {result.imagesWithoutAlt} image(s) missing alt attributes.</span>
+            )}
+          </li>
+          <li>
+            {result.inputsWithoutLabel === 0 ? (
+              <span>✅ All input fields have labels.</span>
+            ) : (
+              <span>⚠️ {result.inputsWithoutLabel} input(s) missing labels.</span>
+            )}
+          </li>
+        </ul>
+      )}
     </div>
   );
 }
